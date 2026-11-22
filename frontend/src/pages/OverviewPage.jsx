@@ -6,17 +6,46 @@ import { toast } from "sonner";
 import { dashboardApi } from "../api/index.js";
 import { currency } from "../utils/format.js";
 import { Card, Empty, PageHeader, Quick, TransactionTable } from "../components/FinanceUI.jsx";
+
+function getGreeting(date) {
+  const hour = date.getHours();
+  if (hour < 12) return "Good morning";
+  if (hour < 17) return "Good afternoon";
+  return "Good evening";
+}
+
+function formatDateLabel(date) {
+  return date
+    .toLocaleDateString("en-GB", {
+      weekday: "long",
+      day: "2-digit",
+      month: "long",
+      year: "numeric",
+    })
+    .toUpperCase();
+}
+
 export default function OverviewPage({ user }) {
   const navigate = useNavigate();
   const [data, setData] = useState(null),
     [range, setRange] = useState("6 months"),
-    [busy, setBusy] = useState(true);
+    [busy, setBusy] = useState(true),
+    [now, setNow] = useState(() => new Date());
+
   useEffect(() => {
     dashboardApi.summary()
       .then((r) => setData(r.data))
       .catch((e) => toast.error(e.message))
       .finally(() => setBusy(false));
   }, []);
+
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setNow(new Date());
+    }, 60000);
+    return () => clearInterval(timer);
+  }, []);
+
   if (busy)
     return (
       <div className="skeleton-grid">
@@ -27,6 +56,7 @@ export default function OverviewPage({ user }) {
         <div />
       </div>
     );
+
   const summary = data?.summary || {},
     wallets = summary.wallets || [],
     total = wallets
@@ -35,6 +65,7 @@ export default function OverviewPage({ user }) {
     prev = summary.previous || {},
     percent = (cur, old) =>
       old ? `${Math.round(((cur - old) / old) * 100)}%` : "—";
+
   const stats = [
     [
       "Total balance",
@@ -65,11 +96,12 @@ export default function OverviewPage({ user }) {
       "Income less expenses this month",
     ],
   ];
+
   return (
     <>
       <PageHeader
-        eyebrow="SATURDAY, 21 NOVEMBER 2026"
-        title={`Good morning, ${user.name?.split(" ")[0]}`}
+        eyebrow={formatDateLabel(now)}
+        title={`${getGreeting(now)}, ${user.name?.split(" ")[0]}`}
         desc="Here’s what’s happening with your money today."
         action={
           <button

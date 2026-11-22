@@ -25,7 +25,7 @@ export const issueCookie = (res, userId, remember = true) => {
   res.cookie("fintrack_token", token, {
     httpOnly: true,
     secure: process.env.NODE_ENV === "production",
-    sameSite: "lax",
+    sameSite: "process.env.NODE_ENV === "production" ? "none" : "lax",
     maxAge: remember ? 30 * 86400000 : 86400000,
   });
 };

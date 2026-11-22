@@ -12,7 +12,10 @@ export const app = express();
 app.use(helmet());
 app.use(
   cors({
-    origin: [process.env.CLIENT_URL || 'http://localhost:5173','https://expense-tracker-and-finance-dashboard-1.onrender.com',]
+    origin: [
+      'http://localhost:5173',
+      'https://expense-tracker-and-finance-dashboard-1.onrender.com',
+    ],
     credentials: true,
   })
 );

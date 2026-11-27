@@ -1,11 +1,10 @@
 import { useState } from "react";
-import { Link, NavLink, useLocation, useNavigate } from "react-router-dom";
-import { Activity, ArrowDownLeft, ArrowLeftRight, ArrowUpRight, Bell, ChartNoAxesCombined, ChevronDown, ChevronLeft, ChevronRight, CircleDollarSign, ClipboardList, Command, CreditCard, Goal, LayoutDashboard, LogOut, Menu, Moon, Plus, Search, Settings, Sun, Wallet as WalletIcon, X } from "lucide-react";
-import { Area, AreaChart, CartesianGrid, Cell, Pie, PieChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
+import { Link, useLocation, useNavigate } from "react-router-dom";
+import { Activity, ChevronRight } from "lucide-react";
 import { toast } from "sonner";
 import { authApi } from "../api/index.js";
-
 import { Field } from "../components/FinanceUI.jsx";
+
 export default function AuthPage({ mode, onAuth }) {
   const location = useLocation(),
     navg = useNavigate(),
@@ -20,6 +19,7 @@ export default function AuthPage({ mode, onAuth }) {
   const register = mode === "register",
     forgot = mode === "forgot",
     reset = mode === "reset";
+
   async function submit(e) {
     e.preventDefault();
     if (register && form.password !== form.confirm)
@@ -49,7 +49,17 @@ export default function AuthPage({ mode, onAuth }) {
         remember,
         ...(register ? { name: form.name.trim() } : {}),
       };
-      const r = await (register ? authApi.register(payload) : authApi.login(payload));
+      if (register) {
+        await authApi.register(payload);
+        try {
+          await authApi.logout();
+        } catch {}
+        onAuth(null);
+        toast.success("Account created! Please sign in.");
+        navg("/login");
+        return;
+      }
+      const r = await authApi.login(payload);
       onAuth(r.data.user);
       navg("/dashboard");
     } catch (err) {
@@ -58,7 +68,9 @@ export default function AuthPage({ mode, onAuth }) {
       setBusy(false);
     }
   }
+
   const set = (key) => (e) => setForm({ ...form, [key]: e.target.value });
+
   return (
     <div className="auth-layout">
       <div className="auth-visual">
